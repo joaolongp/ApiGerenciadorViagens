@@ -1,11 +1,12 @@
 package org.example;
 
 import io.restassured.http.ContentType;
+import org.example.Data.Viagem;
 import org.example.Util.Base;
 import org.example.Util.Login;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.testng.annotations.Test;
-import org.hamcrest.*;
 
 import static io.restassured.RestAssured.given;
 
@@ -14,14 +15,9 @@ public class App extends Base{
 
     @Test
     public void validateNewRegister(){
-        String requestBody ="{\n" +"\"acompanhante\": \"Camila\",\n" +
-                "\"dataPartida\": \"2022-01-01\",\n" +
-                "\"dataRetorno\": \"2022-01-02\",\n" +
-                "\"localDeDestino\": \"Italia\",\n" +
-                "\"regiao\": \"Sul\"\n"+
-                "}";
-        String name = given()
-                .body(requestBody)
+        Viagem viagem = new Viagem();
+        String responseBody = given()
+                .body(viagem.toJsonString())
                 .header("Authorization", login.admin.token)
                 .contentType(ContentType.JSON)
         .when()
@@ -29,32 +25,42 @@ public class App extends Base{
         .then()
                 .statusCode(201)
                 .log().body()
-                .extract().path("data.acompanhante");
-        Assert.assertThat(name, Matchers.is("Camila"));
+                .extract().path("data");
+        Assert.assertThat(responseBody, Matchers.notNullValue());
     }
 
     @Test
     public void validateGetAllRegisters(){
-        given()
+        String responseBody = given()
                 .header("Authorization", login.user.token)
                 .contentType(ContentType.JSON)
         .when()
                 .get("v1/viagens")
         .then()
                 .statusCode(200)
-                .log().body();
+                .log().body()
+                .extract().path("data");
+        Assert.assertThat(responseBody, Matchers.notNullValue());
+    }
+
+    @Test
+    public void validateGetRegisterByID(){
+        String responseBody = given()
+                .header("Authorization", login.user.token)
+                .contentType(ContentType.JSON)
+        .when()
+                .get("v1/viagens")
+        .then()
+                .statusCode(200)
+                .log().body()
+                .extract().path("data");
+        Assert.assertThat(responseBody, Matchers.notNullValue());
     }
 
     @Test
     public void validateEditExistingRegister(){
-        String requestBody ="{\n" +"\"acompanhante\": \"Camila\",\n" +
-                "\"dataPartida\": \"2022-01-01\",\n" +
-                "\"dataRetorno\": \"2022-01-02\",\n" +
-                "\"localDeDestino\": \"Italia\",\n" +
-                "\"regiao\": \"Norte\"\n"+
-                "}";
         given()
-                .body(requestBody)
+                .body(new Viagem().toJsonString())
                 .header("Authorization", login.admin.token)
                 .contentType(ContentType.JSON)
         .when()
